@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.apache.pinot.spi.config.BaseJsonConfig;
 import org.apache.pinot.spi.config.table.assignment.InstanceAssignmentConfig;
@@ -431,5 +432,44 @@ public class TableConfig extends BaseJsonConfig {
       replication = Integer.parseInt(_validationConfig.getReplication());
     }
     return replication;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    TableConfig that = (TableConfig) o;
+    return _dimTable == that._dimTable &&
+            Objects.equals(_tableName, that._tableName) &&
+            _tableType == that._tableType &&
+            Objects.equals(_validationConfig, that._validationConfig) &&
+            Objects.equals(_tenantConfig, that._tenantConfig) &&
+            Objects.equals(_indexingConfig, that._indexingConfig) &&
+            Objects.equals(_customConfig, that._customConfig) &&
+            Objects.equals(_quotaConfig, that._quotaConfig) &&
+            Objects.equals(_taskConfig, that._taskConfig) &&
+            Objects.equals(_routingConfig, that._routingConfig) &&
+            Objects.equals(_queryConfig, that._queryConfig) &&
+            Objects.equals(_instanceAssignmentConfigMap, that._instanceAssignmentConfigMap) &&
+            Objects.equals(_instancePartitionsMap, that._instancePartitionsMap) &&
+            Objects.equals(_segmentAssignmentConfigMap, that._segmentAssignmentConfigMap) &&
+            Objects.equals(_fieldConfigList, that._fieldConfigList) &&
+            Objects.equals(_upsertConfig, that._upsertConfig) &&
+            Objects.equals(_dedupConfig, that._dedupConfig) &&
+            Objects.equals(_dimensionTableConfig, that._dimensionTableConfig) &&
+            Objects.equals(_ingestionConfig, that._ingestionConfig) &&
+            Objects.equals(_tierConfigsList, that._tierConfigsList) &&
+            Objects.equals(_tunerConfigList, that._tunerConfigList);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), _tableName, _tableType,
+            _dimTable, _validationConfig, _tenantConfig, _indexingConfig,
+            _customConfig, _quotaConfig, _taskConfig, _routingConfig,
+            _queryConfig, _instanceAssignmentConfigMap, _instancePartitionsMap,
+            _segmentAssignmentConfigMap, _fieldConfigList, _upsertConfig, _dedupConfig,
+            _dimensionTableConfig, _ingestionConfig, _tierConfigsList, _tunerConfigList);
   }
 }

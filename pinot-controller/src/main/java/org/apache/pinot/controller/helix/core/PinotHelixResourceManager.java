@@ -101,12 +101,7 @@ import org.apache.pinot.common.lineage.LineageEntryState;
 import org.apache.pinot.common.lineage.SegmentLineage;
 import org.apache.pinot.common.lineage.SegmentLineageAccessHelper;
 import org.apache.pinot.common.lineage.SegmentLineageUtils;
-import org.apache.pinot.common.messages.RoutingTableRebuildMessage;
-import org.apache.pinot.common.messages.RunPeriodicTaskMessage;
-import org.apache.pinot.common.messages.SegmentRefreshMessage;
-import org.apache.pinot.common.messages.SegmentReloadMessage;
-import org.apache.pinot.common.messages.TableConfigRefreshMessage;
-import org.apache.pinot.common.messages.TableDeletionMessage;
+import org.apache.pinot.common.messages.*;
 import org.apache.pinot.common.metadata.ZKMetadataProvider;
 import org.apache.pinot.common.metadata.controllerjob.ControllerJobType;
 import org.apache.pinot.common.metadata.instance.InstanceZKMetadata;
@@ -2543,6 +2538,28 @@ public class PinotHelixResourceManager {
       LOGGER.warn("No reload message sent for segment: {} in table: {}", segmentName, tableNameWithType);
     }
     return Pair.of(numMessagesSent, segmentReloadMessage.getMsgId());
+  }
+
+  public Pair<Integer, String> reloadTable(String tableNameWithType) {
+    LOGGER.info("Sending reload message for table: {}", tableNameWithType);
+
+    Criteria recipientCriteria = new Criteria();
+    recipientCriteria.setRecipientInstanceType(InstanceType.PARTICIPANT);
+    recipientCriteria.setInstanceName("%");
+    recipientCriteria.setResource(tableNameWithType);
+    recipientCriteria.setSessionSpecific(true);
+    TableReloadMessage tableReloadMessage = new TableReloadMessage(tableNameWithType);
+    ClusterMessagingService messagingService = _helixZkManager.getMessagingService();
+
+    // Infinite timeout on the recipient
+    int timeoutMs = -1;
+    int numMessagesSent = messagingService.send(recipientCriteria, tableReloadMessage, null, timeoutMs);
+    if (numMessagesSent > 0) {
+      LOGGER.info("Sent {} reload messages for table: {}", numMessagesSent, tableNameWithType);
+    } else {
+      LOGGER.warn("No reload message sent for table: {}", tableNameWithType);
+    }
+    return Pair.of(numMessagesSent, tableReloadMessage.getMsgId());
   }
 
   /**

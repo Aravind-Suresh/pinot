@@ -333,6 +333,19 @@ public class PinotTableRestletResource {
     }
   }
 
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/tables/{tableName}/reload")
+  @ApiOperation(value = "Reloads the table across all the servers", notes = "This would reconstruct the table data" +
+          "manager in case of configuration changes. Example usage: trigger after converting the upsert mode" +
+          "from full to partial.")
+  public SuccessResponse reloadTable(@ApiParam(value = "Name of the table", required = true) @QueryParam("tableName") @Nullable String tableName,
+                            @Context HttpHeaders httpHeaders,
+                            @Context Request request) {
+    _pinotHelixResourceManager.reloadTable(tableName);
+    return new SuccessResponse("triggered a reload table message to the servers");
+  }
+
   private enum SortType {
     NAME, CREATIONTIME, LASTMODIFIEDTIME
   }

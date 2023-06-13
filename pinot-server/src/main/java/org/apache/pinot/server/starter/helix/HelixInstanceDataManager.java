@@ -491,6 +491,20 @@ public class HelixInstanceDataManager implements InstanceDataManager {
   }
 
   @Override
+  public void reloadTable(String tableNameWithType) {
+    TableConfig tableConfig = ZKMetadataProvider.getTableConfig(_propertyStore, tableNameWithType);
+    _tableDataManagerMap.compute(tableNameWithType, (k, tdm) -> {
+      // create only if a table data manager doesn't exist
+      // or the current configuration and the new configuration are different
+      if (tdm == null || !tdm.getTableDataManagerConfig().getTableConfig().equals(tableConfig)) {
+        LOGGER.info("Recreating table data manager for table: {} as we received a reload table request", tableNameWithType);
+        return createTableDataManager(k, tableConfig);
+      }
+      return tdm;
+    });
+  }
+
+  @Override
   public Set<String> getAllTables() {
     return _tableDataManagerMap.keySet();
   }

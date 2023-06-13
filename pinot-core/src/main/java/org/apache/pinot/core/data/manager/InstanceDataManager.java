@@ -145,6 +145,12 @@ public interface InstanceDataManager {
   TableDataManager getTableDataManager(String tableNameWithType);
 
   /**
+   * Reloads the table metadata in the servers. One of the things it does it reconstruct
+   * the table metadata manager.
+   */
+  void reloadTable(String tableNameWithType);
+
+  /**
    * Returns the segment metadata for the given segment in the given table, or <code>null</code> if it does not exist.
    */
   @Nullable

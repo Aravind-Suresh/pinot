@@ -28,10 +28,7 @@ import org.apache.helix.messaging.handling.MessageHandler;
 import org.apache.helix.messaging.handling.MessageHandlerFactory;
 import org.apache.helix.model.Message;
 import org.apache.pinot.common.Utils;
-import org.apache.pinot.common.messages.ForceCommitMessage;
-import org.apache.pinot.common.messages.SegmentRefreshMessage;
-import org.apache.pinot.common.messages.SegmentReloadMessage;
-import org.apache.pinot.common.messages.TableDeletionMessage;
+import org.apache.pinot.common.messages.*;
 import org.apache.pinot.common.metrics.ServerMeter;
 import org.apache.pinot.common.metrics.ServerMetrics;
 import org.apache.pinot.core.data.manager.InstanceDataManager;
@@ -68,6 +65,9 @@ public class SegmentMessageHandlerFactory implements MessageHandlerFactory {
         return new TableDeletionMessageHandler(new TableDeletionMessage(message), _metrics, context);
       case ForceCommitMessage.FORCE_COMMIT_MSG_SUB_TYPE:
         return new ForceCommitMessageHandler(new ForceCommitMessage(message), _metrics, context);
+      // TODO: move this to its own separate handler class
+      case TableReloadMessage.RELOAD_TABLE_MSG_SUB_TYPE:
+        return new ReloadTableMessageHandler(new TableReloadMessage(message), context);
       default:
         LOGGER.warn("Unsupported user defined message sub type: {} for segment: {}", msgSubType,
             message.getPartitionName());
@@ -84,6 +84,29 @@ public class SegmentMessageHandlerFactory implements MessageHandlerFactory {
   @Override
   public void reset() {
     LOGGER.info("Reset called");
+  }
+
+  private class ReloadTableMessageHandler extends MessageHandler {
+    final String _tableNameWithType;
+
+    ReloadTableMessageHandler(TableReloadMessage tableReloadMessage, NotificationContext context) {
+      super(tableReloadMessage, context);
+      _tableNameWithType = tableReloadMessage.getTableNameWithType();
+    }
+
+    @Override
+    public HelixTaskResult handleMessage() {
+      _instanceDataManager.reloadTable(_tableNameWithType);
+      HelixTaskResult result = new HelixTaskResult();
+      result.setSuccess(true);
+      return result;
+    }
+
+    @Override
+    public void onError(Exception e, ErrorCode code, ErrorType type) {
+      LOGGER.error("Got error while refreshing table config for table: {} (error code: {}, error type: {})",
+              _tableNameWithType, code, type, e);
+    }
   }
 
   private class SegmentRefreshMessageHandler extends DefaultMessageHandler {
