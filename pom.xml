@@ -138,7 +138,7 @@
     <jsonsmart.version>2.4.10</jsonsmart.version>
     <quartz.version>2.3.2</quartz.version>
     <calcite.version>1.30.0</calcite.version>
-    <lucene_core.version>9.4.0</lucene_core.version>
+    <lucene_core.version>9.4.2</lucene_core.version>
     <lucene.version>8.11.2</lucene.version>
     <reflections.version>0.9.11</reflections.version>
     <!-- commons-configuration, hadoop-common, hadoop-client use commons-lang -->

@@ -3,8 +3,8 @@ package org.apache.pinot.segment.spi.index.mutable;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.apache.pinot.segment.spi.index.reader.PinotVector;
 import org.apache.pinot.segment.spi.index.reader.VectorIndexReader;
+import org.apache.pinot.spi.data.readers.Vector;
 
 
 public interface MutableVectorIndex extends VectorIndexReader, MutableIndex {
@@ -18,6 +18,6 @@ public interface MutableVectorIndex extends VectorIndexReader, MutableIndex {
     throw new UnsupportedOperationException("Mutable vector indexes are not supported for multi-valued columns");
   }
 
-  void add(PinotVector vector)
+  void add(Vector vector)
       throws IOException;
 }
