@@ -264,17 +264,28 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
-      <version>${lucene.version}</version>
+      <version>${lucene_core.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-queryparser</artifactId>
       <version>${lucene.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.lucene</groupId>
+          <artifactId>lucene-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-analyzers-common</artifactId>
-      <version>${lucene.version}</version>
+      <version>${lucene.version}</version><exclusions>
+      <exclusion>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+      </exclusion>
+    </exclusions>
     </dependency>
   </dependencies>
   <profiles>
