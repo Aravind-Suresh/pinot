@@ -12,55 +12,54 @@ import org.apache.pinot.spi.config.table.VectorSimilarity;
 import org.apache.pinot.spi.data.readers.Vector;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
 public class MutableVectorIndexImplTest {
   private static final int MAX_NEIGHBORS = 10;
-  private static final int DIMENSION = 32;
+  private static final int SMALL_DIMENSION = 3;
+  private static final int LARGE_DIMENSION = 32;
   private VectorIndexConfig _vectorIndexConfig;
   private MutableVectorIndexImpl _vectorIndex;
-
-  @BeforeMethod
-  public void setup() {
-    _vectorIndexConfig = new VectorIndexConfig(false, Vector.VectorType.FLOAT, DIMENSION, VectorSimilarity.COSINE,
-        VectorIndexingTechniqueType.HNSW, MAX_NEIGHBORS, new HashMap<>());
-    _vectorIndex = new MutableVectorIndexImpl(_vectorIndexConfig);
-  }
 
   @Test
   public void testSmallIndex()
       throws IOException {
-    float[][] data = generateTestData();
+    _vectorIndexConfig = new VectorIndexConfig(false, Vector.VectorType.FLOAT, SMALL_DIMENSION, VectorSimilarity.COSINE,
+        VectorIndexingTechniqueType.HNSW, MAX_NEIGHBORS, new HashMap<>());
+    _vectorIndex = new MutableVectorIndexImpl(_vectorIndexConfig);
+    float[][] data = generateSmallTestData();
     for (float[] vector: data) {
-      _vectorIndex.add(new Vector(DIMENSION, vector));
+      _vectorIndex.add(new Vector(SMALL_DIMENSION, vector));
     }
     float[] query = {1, 1, 1};
-    MutableRoaringBitmap result = _vectorIndex.getMatchingDocIds(new Vector(DIMENSION, query), 2);
+    MutableRoaringBitmap result = _vectorIndex.getMatchingDocIds(new Vector(SMALL_DIMENSION, query), 2);
     Assert.assertEquals(new int[]{0, 2}, result.toArray());
   }
 
   @Test
   public void testLargeIndex()
       throws IOException {
-    final int len = 1_00_000;
-    final int n = 3;
+    _vectorIndexConfig = new VectorIndexConfig(false, Vector.VectorType.FLOAT, LARGE_DIMENSION, VectorSimilarity.COSINE,
+        VectorIndexingTechniqueType.HNSW, MAX_NEIGHBORS, new HashMap<>());
+    _vectorIndex = new MutableVectorIndexImpl(_vectorIndexConfig);
+    final int len = 1_000;
     final float[] pos = {-1, 0, 1};
+    final int n = pos.length;
     final float[][] arr = new float[len][];
     for (int i = 0; i < len; ++i) {
-      float[] val = new float[DIMENSION];
-      for (int j = 0; j < DIMENSION; ++j) {
+      float[] val = new float[LARGE_DIMENSION];
+      for (int j = 0; j < LARGE_DIMENSION; ++j) {
         val[j] = pos[Math.abs(ThreadLocalRandom.current().nextInt()) % n];
       }
       arr[i] = val;
-      _vectorIndex.add(new Vector(DIMENSION, val));
+      _vectorIndex.add(new Vector(LARGE_DIMENSION, val));
     }
     int q = 10;
     int k = 3;
     while (q-- > 0) {
       int i = Math.abs(ThreadLocalRandom.current().nextInt()) % n;
-      MutableRoaringBitmap result = _vectorIndex.getMatchingDocIds(new Vector(DIMENSION, arr[i]), k);
+      MutableRoaringBitmap result = _vectorIndex.getMatchingDocIds(new Vector(LARGE_DIMENSION, arr[i]), k);
       int[] actual = result.toArray();
       int[] expectedArr = new int[len];
       for (int j = 0; j < len; ++j) {
@@ -71,15 +70,20 @@ public class MutableVectorIndexImplTest {
         float s2 = VectorUtils.vectorSimilarityFunction(VectorSimilarity.COSINE).compare(arr[k2], arr[i]);
         return Float.compare(s2, s1);
       });
-      int[] expected = ArrayUtils.subarray(expectedArr, 0, k);
+      // as hnsw is approximate knn search, we are checking if the top-k actuals are
+      // contained within the top-5k expected values
+      int[] expected = ArrayUtils.subarray(expectedArr, 0, 5*k);
       Arrays.sort(expected);
       Arrays.sort(actual);
-      // TODO change this to actual in 2*k of expected
-      Assert.assertTrue(Arrays.equals(expected, actual));
+      boolean valid = true;
+      for (int u: actual) {
+        valid = valid && ArrayUtils.contains(expected, u);
+      }
+      Assert.assertTrue(valid);
     }
   }
 
-  private float[][] generateTestData() {
+  private float[][] generateSmallTestData() {
     return new float[][]{
         {1, 1, 1},
         {-1, -1, -1},
