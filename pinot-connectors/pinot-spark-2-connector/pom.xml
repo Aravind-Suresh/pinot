@@ -126,6 +126,14 @@
                   <goal>shade</goal>
                 </goals>
                 <configuration>
+                  <filters>
+                    <filter>
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>META-INF/versions/19/**</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
                   <relocations>
                     <relocation>
                       <pattern>com</pattern>
